@@ -46,10 +46,17 @@ function executeBokehScript(scriptHtml) {
   if (!scriptHtml) return;
   const match = scriptHtml.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i);
   const code = match ? match[1] : scriptHtml;
-  const el = document.createElement('script');
-  el.type = 'text/javascript';
-  el.text = code;
-  document.body.appendChild(el);
+  const inject = () => {
+    if (typeof window.Bokeh === 'undefined') {
+      setTimeout(inject, 50);
+      return;
+    }
+    const el = document.createElement('script');
+    el.type = 'text/javascript';
+    el.text = code;
+    document.body.appendChild(el);
+  };
+  inject();
 }
 
 async function mountBokehInsights(currentState) {
@@ -104,7 +111,7 @@ async function mountBokehSavings(currentState) {
     const data = await res.json();
     if (data.status !== 'ok' || !data.charts || !data.charts.savings) return;
 
-    savingsEl.className = 'journey-line chart-target';
+    savingsEl.className = 'chart-target';
     savingsEl.style.display = 'block';
     savingsEl.innerHTML = data.charts.savings.div;
     executeBokehScript(data.charts.savings.script);

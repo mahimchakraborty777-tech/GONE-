@@ -12,6 +12,18 @@ from .bokeh_charts import (
     generate_savings_journey
 )
 
+def ensure_tables():
+    """Ensure database tables exist on Vercel serverless cold starts."""
+    try:
+        from django.db import connection
+        from django.core.management import call_command
+        tables = connection.introspection.table_names()
+        if 'tracker_entry' not in tables:
+            call_command('migrate', interactive=False)
+    except Exception as e:
+        print('ensure_tables notice:', e)
+
+
 def index_view(request):
     """Serve the single page application index.html."""
     index_path = os.path.join(settings.BASE_DIR, 'public', 'index.html')
@@ -30,6 +42,7 @@ def bokeh_insights_api(request):
     - Spending Pulse (7 days): #chart-trend
     - Six Month Comparisons: #chart-monthly
     """
+    ensure_tables()
     entries = []
     if request.method == 'POST':
         try:
@@ -41,7 +54,10 @@ def bokeh_insights_api(request):
 
     # If no entries passed from client, query backend database
     if not entries:
-        entries = list(Entry.objects.values('entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source'))
+        try:
+            entries = list(Entry.objects.values('entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source'))
+        except Exception:
+            entries = []
 
     try:
         s_cat, d_cat = generate_category_donut(entries)
@@ -66,6 +82,7 @@ def bokeh_savings_api(request):
     Generate Bokeh chart for Savings screen (#savings):
     - Savings Journey: #chart-savings-trend
     """
+    ensure_tables()
     entries = []
     goal = None
 
@@ -81,10 +98,16 @@ def bokeh_savings_api(request):
 
     # If no entries passed, query backend database
     if not entries:
-        entries = list(Entry.objects.values('entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source'))
+        try:
+            entries = list(Entry.objects.values('entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source'))
+        except Exception:
+            entries = []
     if goal is None:
-        p = Profile.objects.first()
-        goal = p.saving_goal if p else 0
+        try:
+            p = Profile.objects.first()
+            goal = p.saving_goal if p else 0
+        except Exception:
+            goal = 0
 
     try:
         s_sav, d_sav = generate_savings_journey(entries, saving_goal=goal)
@@ -101,6 +124,7 @@ def bokeh_savings_api(request):
 @csrf_exempt
 def sync_state_api(request):
     """Two-way sync: receives client state and persists to SQLite database."""
+    ensure_tables()
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'POST required'}, status=405)
 
@@ -164,67 +188,75 @@ def sync_state_api(request):
 
 def get_state_api(request):
     """Retrieve full database state as JSON."""
-    p = Profile.objects.first()
-    profile_data = {
-        'name': p.name if p else '',
-        'budget': p.budget if p else 0,
-        'monthlyIncome': p.monthly_income if p else 0
-    }
-    saving_goal = p.saving_goal if p else None
-    onboarding_complete = p.onboarding_complete if p else False
+    ensure_tables()
+    try:
+        p = Profile.objects.first()
+        profile_data = {
+            'name': p.name if p else '',
+            'budget': p.budget if p else 0,
+            'monthlyIncome': p.monthly_income if p else 0
+        }
+        saving_goal = p.saving_goal if p else None
+        onboarding_complete = p.onboarding_complete if p else False
 
-    entries = list(Entry.objects.values(
-        'entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source', 'reminder_id', 'auto_logged'
-    ))
-    formatted_entries = [{
-        'id': e['entry_id'],
-        'title': e['title'],
-        'amount': e['amount'],
-        'kind': e['kind'],
-        'category': e['category'],
-        'date': e['date'],
-        'source': e['source'],
-        'reminderId': e['reminder_id'],
-        'autoLogged': e['auto_logged']
-    } for e in entries]
+        entries = list(Entry.objects.values(
+            'entry_id', 'title', 'amount', 'kind', 'category', 'date', 'source', 'reminder_id', 'auto_logged'
+        ))
+        formatted_entries = [{
+            'id': e['entry_id'],
+            'title': e['title'],
+            'amount': e['amount'],
+            'kind': e['kind'],
+            'category': e['category'],
+            'date': e['date'],
+            'source': e['source'],
+            'reminderId': e['reminder_id'],
+            'autoLogged': e['auto_logged']
+        } for e in entries]
 
-    splits = list(Split.objects.values('split_id', 'description', 'total', 'friends', 'date'))
-    formatted_splits = [{
-        'id': s['split_id'],
-        'description': s['description'],
-        'total': s['total'],
-        'friends': s['friends'],
-        'date': s['date']
-    } for s in splits]
+        splits = list(Split.objects.values('split_id', 'description', 'total', 'friends', 'date'))
+        formatted_splits = [{
+            'id': s['split_id'],
+            'description': s['description'],
+            'total': s['total'],
+            'friends': s['friends'],
+            'date': s['date']
+        } for s in splits]
 
-    return JsonResponse({
-        'version': 3,
-        'onboardingComplete': onboarding_complete,
-        'profile': profile_data,
-        'savingGoal': saving_goal,
-        'entries': formatted_entries,
-        'splits': formatted_splits
-    })
+        return JsonResponse({
+            'version': 3,
+            'onboardingComplete': onboarding_complete,
+            'profile': profile_data,
+            'savingGoal': saving_goal,
+            'entries': formatted_entries,
+            'splits': formatted_splits
+        })
+    except Exception as exc:
+        return JsonResponse({'status': 'error', 'message': str(exc)}, status=500)
 
 
 def export_csv_view(request):
     """Download CSV file of all recorded entries."""
+    ensure_tables()
     response = HttpResponse(content_type='text/csv; charset=utf-8')
     response['Content-Disposition'] = 'attachment; filename="gone_entries_report.csv"'
 
     writer = csv.writer(response)
     writer.writerow(['ID', 'Date', 'Type', 'Title', 'Category', 'Amount (INR)', 'Source', 'Auto-Logged'])
 
-    for e in Entry.objects.all().order_by('-date'):
-        writer.writerow([
-            e.entry_id,
-            e.date,
-            e.kind.upper(),
-            e.title,
-            e.category,
-            e.amount,
-            e.source,
-            'Yes' if e.auto_logged else 'No'
-        ])
+    try:
+        for e in Entry.objects.all().order_by('-date'):
+            writer.writerow([
+                e.entry_id,
+                e.date,
+                e.kind.upper(),
+                e.title,
+                e.category,
+                e.amount,
+                e.source,
+                'Yes' if e.auto_logged else 'No'
+            ])
+    except Exception:
+        pass
 
     return response
