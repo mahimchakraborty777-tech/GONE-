@@ -132,6 +132,8 @@ function render(announceRoute = false) {
   ui.desktopNav.hidden = intro;
   ui.bottomNav.hidden = intro;
   ui.floatingAdd.hidden = intro || route === 'add';
+  const welcomeBtn = document.querySelector('#btn-welcome-screen');
+  if (welcomeBtn) welcomeBtn.hidden = intro;
   const title = {
     welcome: 'Welcome', onboarding: 'Your setup', home: 'Home', add: 'Add an entry',
     expenses: 'Entries', dashboard: 'Insights', savings: 'Savings', split: 'Split a bill'
@@ -417,6 +419,13 @@ function handleAction(action) {
     case 'remove-goal':
       state.savingGoal = null;
       commit('Saving goal removed.');
+      return;
+    case 'reset-profile':
+      if (confirm('Start fresh with a new profile?')) {
+        localStorage.removeItem('gone.browser-app.v3');
+        location.hash = '#/welcome';
+        location.reload();
+      }
       return;
   }
 }
