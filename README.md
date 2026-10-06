@@ -1,87 +1,95 @@
-# 💸 GONE (Growth Over Needless Expenses)
+GONE (Growth Over Needless Expenses)
+A simple, distraction-free money companion to help you track where your money goes.
 
-> *"Know where it went."*
+GONE is a lightweight, mobile-first web app built for students and young professionals. Instead of complicated spreadsheets and dense financial jargon, GONE gives you a clean overview of your daily spending, recurring habits, savings goals, and shared group bills.
 
-GONE is a warm-earth, mobile-first money tracking application designed for students and young professionals who want smarter spending insights without boring spreadsheets.
 
----
+## 🌟 Key Features
 
-## 🌟 Key Features & Interactive Bokeh Visualizations
+- Daily Expense & Income Logging:** Quick entry for what you spent or received, with automatic Indian Rupee (₹) formatting and category tags.
+- Lazy Daily Reminders:** One-tap toggles for regular daily expenses (like Chai, Metro commute, or Mobile Recharge) that can auto-log at the end of the day.
+- Budget Tracking:** Clear view of how much money is left in your monthly budget with a visual usage ring.
+- Savings Target:** Set a monthly savings goal and watch your progress update automatically as you log your cash flow.
+- Bill Splitter:** Split dinner or trip bills equally with friends without confusing calculations.
+- Data Export:** Download your complete transaction history as a clean CSV file anytime.
+- Offline & Online Resilience:** Works smoothly inside your browser using local storage, while syncing changes with the backend.
 
-- **🍩 Category Donut Chart (`#chart-category`)**: Interactive Bokeh annular donut visualization showing exact category breakdown with percentage and formatted INR (`₹`) tooltips.
-- **📈 7-Day Spending Pulse (`#chart-trend`)**: Dynamic daily spending pulse with area shading and hover inspection.
-- **📊 6-Month Comparison Bars (`#chart-monthly`)**: Month-by-month spending comparisons with rounded bar styling.
-- **💎 Savings Journey (`#chart-savings-trend`)**: Cumulative savings tracking against a configurable target goal reference benchmark.
-- **⚡ Lazy-Friendly Reminders**: Tap-to-toggle daily recurring expenses (Chai ₹20, Metro ₹50, Recharge ₹99) with auto-logging support.
-- **🤝 Equal Share Bill Splitter**: Calculate equal shares among friends without awkward math.
-- **📤 Real CSV Export**: Download a full CSV audit of your ledger at `/api/export-csv/`.
-- **🔄 Two-Way Resilient Sync**: Offline-first browser persistence paired with Django SQLite synchronization.
 
----
+
+## 📊 Interactive Visualizations with Bokeh
+
+Instead of static images or flat CSS bars, GONE uses Bokeh to generate clean, interactive data visualizations that match the app's warm-earth theme:
+
+1. Where It All Went (Category Donut): Shows how your spending is distributed across categories (Food, Travel, Shopping, Bills, etc.) with exact amounts and percentage tooltips on hover.
+2. 7-Day Spending Pulse (Trend Line): A shaded line chart tracking day-by-day expenses over the last week so you can spot spending spikes.
+3. Month-by-Month Comparison (Bar Chart): Compares your total spending across the last six months with rounded vertical bars.
+4. Savings Journey (Progress Chart): Tracks your net savings month over month against a dashed benchmark line representing your target savings goal.
+
+All Bokeh plots are interactive—you can hover over points, bars, and slices on both desktop and mobile to see exact figures.
+
+
+⚙️ How Django Powers the Backend
+
+
+The backend is built with **Django**, handling data storage, synchronization, and analytics behind the scenes:
+
+- Data Models: Stores and organizes users' financial entries, profile settings (budget, income, goal), recurring reminders, and bill splits in a lightweight SQLite database.
+- REST & Sync APIs: Provides endpoints (`/api/state/sync/` and `/api/state/`) that sync entries between the browser and the server.
+- Bokeh Component Rendering:** Django processes your transactions and uses Bokeh's `components()` engine to generate the interactive chart scripts and HTML dynamically.
+- CSV Generator: A dedicated endpoint (`/api/export-csv/`) that compiles your ledger into a downloadable spreadsheet file.
+- Serverless Ready: Configured to run locally via `manage.py` or deploy as a serverless WSGI app on platforms like Vercel.
+
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Plain HTML5, CSS3, Vanilla ES6+ JavaScript, Bokeh 3.10 JS CDN runtime.
-- **Backend**: Python 3.10+, Django 5+, Bokeh 3.10, WhiteNoise 6+.
-- **Database**: SQLite (persists locally in `db.sqlite3` and `/tmp/db.sqlite3` on Vercel).
-- **Deployment**: Vercel-ready with `@vercel/python` serverless WSGI integration.
+- **Frontend:** HTML5, CSS3 (Custom warm-earth design system), Vanilla JavaScript (ES6+), Bokeh JS runtime.
+- **Backend:** Python, Django 5+, WhiteNoise (static file serving).
+- **Visualization:** Bokeh 3.10.
+- **Database:** SQLite (local `db.sqlite3` / serverless `/tmp/db.sqlite3`).
+- **Deployment:** Vercel (`vercel.json` + Python WSGI).
 
 ---
 
 ## 🚀 Running Locally
 
-### Option 1: Running with Django Backend (Recommended)
-
-1. Make sure Python 3.10+ is installed.
-2. Activate your virtual environment and install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
-4. Start the Django server:
-   ```bash
-   python manage.py runserver
-   ```
-5. Open [http://localhost:8000](http://localhost:8000) in your browser.
-
-### Option 2: Running with Node.js Static/Proxy Server
-
+### 1. Clone the repository
 ```bash
-node server.js
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🌐 Deploying to Vercel
-
-The repository includes a production-configured `vercel.json` and `gone_project/wsgi.py`:
-
-1. Push your code to your GitHub repository:
-   ```bash
-   git add .
-   git commit -m "Add Django backend and Bokeh visualizations"
-   git push origin main
-   ```
-2. In your [Vercel Dashboard](https://vercel.com), import the repository.
-3. Vercel automatically detects the Python runtime from `vercel.json` and installs dependencies from `requirements.txt`.
-4. Click **Deploy**. Your app will be live with both frontend and Bokeh backend!
-
----
-
-## 🧪 Running Tests
-
-To verify backend endpoints and chart generation:
-
-```bash
-python manage.py test tracker
+git clone https://github.com/mahimchakraborty777-tech/GONE-.git
+cd GONE-
 ```
 
+### 2. Set up a virtual environment & install dependencies
+```bash
+python -m venv .venv
+# Windows:
+.\.venv\Scripts\activate
+# Mac/Linux:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### 3. Run database migrations
+```bash
+python manage.py migrate
+```
+
+### 4. Start the server
+```bash
+python manage.py runserver
+```
+
+Open your browser and navigate to **`http://localhost:8000`**.
+
 ---
+
+## 🌐 Deployment (Vercel)
+
+The repository includes a pre-configured `vercel.json` file:
+1. Push this repository to GitHub.
+2. Import the project in your [Vercel Dashboard](https://vercel.com).
+3. Vercel automatically detects the Python runtime from `vercel.json`, installs packages from `requirements.txt`, and deploys the app live.
 
 ## 📄 License
 
-MIT License. Designed and crafted with ❤️ for smarter spending.
+MIT License. Crafted for smarter, stress-free money management.
