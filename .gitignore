@@ -1,0 +1,29 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Python & Django
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+staticfiles/
+
+# Logs & Environment
+*.log
+.env
+
+# Editor & IDE settings
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Release Archives
+gone_app.zip

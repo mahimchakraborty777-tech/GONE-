@@ -42,6 +42,87 @@ function navigate(name) {
   location.hash = next;
 }
 
+function executeBokehScript(scriptHtml) {
+  if (!scriptHtml) return;
+  const match = scriptHtml.match(/<script\b[^>]*>([\s\S]*?)<\/script>/i);
+  const code = match ? match[1] : scriptHtml;
+  const el = document.createElement('script');
+  el.type = 'text/javascript';
+  el.text = code;
+  document.body.appendChild(el);
+}
+
+async function mountBokehInsights(currentState) {
+  const catEl = document.getElementById('chart-category');
+  const trendEl = document.getElementById('chart-trend');
+  const monthlyEl = document.getElementById('chart-monthly');
+  if (!catEl && !trendEl && !monthlyEl) return;
+
+  try {
+    const res = await fetch('/api/bokeh/insights/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: currentState.entries })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.charts) return;
+
+    if (catEl && data.charts.category) {
+      catEl.innerHTML = data.charts.category.div;
+      executeBokehScript(data.charts.category.script);
+    }
+    if (trendEl && data.charts.trend) {
+      trendEl.className = 'chart-target';
+      trendEl.innerHTML = data.charts.trend.div;
+      executeBokehScript(data.charts.trend.script);
+    }
+    if (monthlyEl && data.charts.monthly) {
+      monthlyEl.className = 'chart-target';
+      monthlyEl.innerHTML = data.charts.monthly.div;
+      executeBokehScript(data.charts.monthly.script);
+    }
+  } catch (err) {
+    console.debug('Bokeh insights chart fallback to CSS:', err);
+  }
+}
+
+async function mountBokehSavings(currentState) {
+  const savingsEl = document.getElementById('chart-savings-trend');
+  if (!savingsEl) return;
+
+  try {
+    const res = await fetch('/api/bokeh/savings/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entries: currentState.entries,
+        savingGoal: currentState.savingGoal
+      })
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.charts || !data.charts.savings) return;
+
+    savingsEl.className = 'journey-line chart-target';
+    savingsEl.style.display = 'block';
+    savingsEl.innerHTML = data.charts.savings.div;
+    executeBokehScript(data.charts.savings.script);
+  } catch (err) {
+    console.debug('Bokeh savings chart fallback to CSS:', err);
+  }
+}
+
+function syncBackend(currentState) {
+  try {
+    fetch('/api/state/sync/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentState)
+    }).catch(() => {});
+  } catch (_) {}
+}
+
 function render(announceRoute = false) {
   const intro = route === 'welcome' || route === 'onboarding';
   document.body.classList.toggle('is-intro', intro);
@@ -64,6 +145,13 @@ function render(announceRoute = false) {
       if (ui.routeAnnouncement) ui.routeAnnouncement.textContent = `${title} page`;
     });
   }
+
+  // Mount Interactive Bokeh Visualizations
+  if (route === 'dashboard') {
+    mountBokehInsights(state);
+  } else if (route === 'savings') {
+    mountBokehSavings(state);
+  }
 }
 
 function toast(message) {
@@ -77,6 +165,7 @@ function toast(message) {
 
 function commit(message, nextRoute = '') {
   const saved = saveState(state);
+  syncBackend(state);
   if (nextRoute) navigate(nextRoute);
   else render();
   toast(saved ? message : 'Your browser could not save this change. Check its storage settings.');
@@ -483,6 +572,7 @@ function initialize() {
   changed = syncMonthlyIncome() || changed;
   if (changed) saveState(state);
   render();
+  if (state.entries.length > 0) syncBackend(state);
   document.addEventListener('click', handleClick);
   document.addEventListener('submit', handleSubmit);
   document.addEventListener('input', handleInput);

@@ -30,6 +30,25 @@ function resolveFile(rawUrl) {
 }
 
 const server = http.createServer((request, response) => {
+  if (request.url.startsWith('/api/')) {
+    const proxyReq = http.request({
+      hostname: '127.0.0.1',
+      port: 8000,
+      path: request.url,
+      method: request.method,
+      headers: request.headers
+    }, (proxyRes) => {
+      response.writeHead(proxyRes.statusCode, proxyRes.headers);
+      proxyRes.pipe(response);
+    });
+    proxyReq.on('error', () => {
+      response.writeHead(502, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'Django backend not reachable on port 8000' }));
+    });
+    request.pipe(proxyReq);
+    return;
+  }
+
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     response.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8', Allow: 'GET, HEAD' });
     response.end('Method not allowed');

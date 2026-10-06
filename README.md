@@ -1,37 +1,87 @@
-# GONE — Know where it went
+# 💸 GONE (Growth Over Needless Expenses)
 
-**Growth Over Needless Expenses** is a warm-earth, mobile-first money companion built with plain HTML, CSS, and vanilla JavaScript. It has no framework, bundler, API, or build step.
+> *"Know where it went."*
 
-## What is included
+GONE is a warm-earth, mobile-first money tracking application designed for students and young professionals who want smarter spending insights without boring spreadsheets.
 
-- A welcome screen and optional first-run setup for a local display name, monthly spending budget, and daily reminder choices. New profiles can skip setup and land on an empty ledger.
-- Static hash routes for Home, Add, Entries, Insights, Savings, and Split, with browser back/forward support, active navigation states, keyboard focus transfer, screen-reader route announcements, and a persistent add action.
-- Indian-rupee expense and income forms. The amount field formats values such as `5000` as `5,000`; expenses have category chips and both entry types have a date.
-- Home summaries for money left, spending today/this week, biggest expense, reminders, and recent entries. “See all” opens Entries filtered to the last 7 days.
-- Daily Chai (₹20), Metro (₹50), and Recharge (₹99) reminder templates. Templates are not sample transactions. A switch logs one expense; switching it off removes that reminder-generated entry. “Skip all today” skips unmarked reminders. Unmarked reminders log at midnight while GONE is open, or when the user returns if the page was closed.
-- Entry filters by type, category, and time; CSS charts for category, recent-trend, and monthly views with stable mount IDs (`chart-category`, `chart-trend`, `chart-monthly`, `chart-savings-trend`); savings goal/progress, recurring monthly income, one-time bonus income, and an equal-share bill calculator. The Savings screen includes “View expenses” (last 7 days) and “Adjust goal” shortcuts.
-- Self-hosted Manrope variable font (`public/assets/fonts/manrope-latin-vf.woff2`) with the SIL Open Font License in `public/assets/fonts/OFL-Manrope.txt`.
+---
 
-## Data and account boundary
+## 🌟 Key Features & Interactive Bokeh Visualizations
 
-All profile, transaction, reminder, goal, and split data is stored in that browser profile's `localStorage`. Existing entries and a savings goal from the previous GONE local-ledger format are migrated on first open. Data is not uploaded, synced to other devices, or backed up automatically. Anyone with access to the browser profile may be able to see it, and clearing the browser's site data removes it.
+- **🍩 Category Donut Chart (`#chart-category`)**: Interactive Bokeh annular donut visualization showing exact category breakdown with percentage and formatted INR (`₹`) tooltips.
+- **📈 7-Day Spending Pulse (`#chart-trend`)**: Dynamic daily spending pulse with area shading and hover inspection.
+- **📊 6-Month Comparison Bars (`#chart-monthly`)**: Month-by-month spending comparisons with rounded bar styling.
+- **💎 Savings Journey (`#chart-savings-trend`)**: Cumulative savings tracking against a configurable target goal reference benchmark.
+- **⚡ Lazy-Friendly Reminders**: Tap-to-toggle daily recurring expenses (Chai ₹20, Metro ₹50, Recharge ₹99) with auto-logging support.
+- **🤝 Equal Share Bill Splitter**: Calculate equal shares among friends without awkward math.
+- **📤 Real CSV Export**: Download a full CSV audit of your ledger at `/api/export-csv/`.
+- **🔄 Two-Way Resilient Sync**: Offline-first browser persistence paired with Django SQLite synchronization.
 
-There is **no real sign-up/login, secure user account, server, or database** in this static edition. The welcome/setup flow is local personalization only. This keeps the app aligned with the chosen browser-only deployment boundary.
+---
 
-## Run locally
+## 🛠️ Tech Stack
 
-Use the built-in Node HTTP server (Node 18+):
+- **Frontend**: Plain HTML5, CSS3, Vanilla ES6+ JavaScript, Bokeh 3.10 JS CDN runtime.
+- **Backend**: Python 3.10+, Django 5+, Bokeh 3.10, WhiteNoise 6+.
+- **Database**: SQLite (persists locally in `db.sqlite3` and `/tmp/db.sqlite3` on Vercel).
+- **Deployment**: Vercel-ready with `@vercel/python` serverless WSGI integration.
 
-```sh
+---
+
+## 🚀 Running Locally
+
+### Option 1: Running with Django Backend (Recommended)
+
+1. Make sure Python 3.10+ is installed.
+2. Activate your virtual environment and install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run migrations:
+   ```bash
+   python manage.py migrate
+   ```
+4. Start the Django server:
+   ```bash
+   python manage.py runserver
+   ```
+5. Open [http://localhost:8000](http://localhost:8000) in your browser.
+
+### Option 2: Running with Node.js Static/Proxy Server
+
+```bash
 node server.js
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Then open `http://localhost:3000`. No `npm install` or build is needed.
+---
 
-## GitHub and Vercel
+## 🌐 Deploying to Vercel
 
-The repository includes `vercel.json` with `outputDirectory: "public"`.
+The repository includes a production-configured `vercel.json` and `gone_project/wsgi.py`:
 
-1. Put the project source in a GitHub repository. For a fresh local copy, initialize Git, commit the source, and push the `main` branch to your repository. If working from a Manus project checkout, add a separate GitHub remote rather than replacing its canonical `origin`.
-2. In Vercel, import the GitHub repository, choose the repository root and **Other** framework preset, and leave the build command empty.
-3. Deploy. Vercel serves the static `public/` files; do not configure a server, database, authentication provider, or secret variables for this version.
+1. Push your code to your GitHub repository:
+   ```bash
+   git add .
+   git commit -m "Add Django backend and Bokeh visualizations"
+   git push origin main
+   ```
+2. In your [Vercel Dashboard](https://vercel.com), import the repository.
+3. Vercel automatically detects the Python runtime from `vercel.json` and installs dependencies from `requirements.txt`.
+4. Click **Deploy**. Your app will be live with both frontend and Bokeh backend!
+
+---
+
+## 🧪 Running Tests
+
+To verify backend endpoints and chart generation:
+
+```bash
+python manage.py test tracker
+```
+
+---
+
+## 📄 License
+
+MIT License. Designed and crafted with ❤️ for smarter spending.
