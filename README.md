@@ -28,7 +28,7 @@ Instead of static images or flat CSS bars, GONE uses Bokeh to generate clean, in
 All Bokeh plots are interactive—you can hover over points, bars, and slices on both desktop and mobile to see exact figures.
 
 
-⚙️ How Django Powers the Backend
+**⚙️ How Django Powers the Backend**
 
 
 The backend is built with **Django**, handling data storage, synchronization, and analytics behind the scenes:
